@@ -8,80 +8,51 @@ CHAT_ID = "@pixhojeoficial"
 
 logging.basicConfig(level=logging.INFO)
 
-respostas_saudacao = [
-    "Olá! Seja muito bem-vindo(a) ao PixHoje 👋\nVocê tá aqui por um motivo... quer saber o que vai mudar a sua vida hoje?",
-    "Oi! Bem-vindo(a). Tô aqui pra te mostrar um caminho novo com o celular que você já tem nas mãos.",
-    "Seja bem-vindo(a)! Já ouviu falar do método que tá fazendo Pix cair pra gente comum todos os dias?"
-]
+etapas_conversa = {
+    0: "Olá! Seja muito bem-vindo(a) ao PixHoje 💬\nVocê caiu aqui por acaso ou tá buscando uma virada de chave na vida?",
+    1: "Perfeito, essa curiosidade já é o primeiro passo.\nO PixHoje não é curso, nem promessa mágica. É um método simples que mostra como fazer R$75 a R$250 direto no Pix com o celular.\nVocê se sente preso(a) na rotina às vezes?",
+    2: "Eu te entendo. Sabe o que é mais louco? Quem mais se transforma com esse método são justamente os que entram com medo.\nO medo mostra que você se importa. E quem aplica, vê acontecer.",
+    3: "Sei o que você tá pensando: 'E se for só mais um link qualquer?'\nMas é por isso que eu tô conversando com você. Porque aqui, a venda é a última parte. Primeiro vem o propósito.",
+    4: "E sim: você tem 7 dias de garantia. Não curtiu? Pede o estorno e o valor volta. Mas vou te dizer: menos de 1% pede. E sabe o motivo? Quem aplica, colhe. Simples assim.",
+    5: "Você não deve se interessar só pelo Pix. Mas porque você já tentou tanto e ainda não recebeu o que merece.\nEsse método é pequeno no valor, mas grande na transformação — se você fizer com propósito.",
+    6: "Agora sim... você está pronto(a).\n👉 https://bit.ly/pixhojevip\nDepois que acessar, volta aqui e me diz 'entrei'. Quero acompanhar de perto. 💸"
+}
 
-respostas_duvida = [
-    "É normal desconfiar... mas sabe quem não recebeu Pix? Quem nunca tentou. 😉",
-    "A dúvida é o que separa quem fica parado de quem muda de vida.",
-    "Funciona sim! E eu só te mostro porque já vi acontecer com várias pessoas que começaram sem acreditar também."
-]
+interacoes = {}
 
-respostas_interesse = [
-    "Adoro quando alguém quer saber mais. Isso já mostra atitude.",
-    "Quer saber mais? Só me promete que se eu te mostrar, você vai aplicar, combinado?",
-    "Tá pronto(a) pra realmente fazer diferente dessa vez?"
-]
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    interacoes[user_id] = 0
+    await update.message.reply_text(etapas_conversa[0])
 
-mensagem_link = "Então agora sim... você está pronto(a).\n👉 https://bit.ly/pixhojevip\nDepois de acessar, me chama aqui com seu print, quero acompanhar de perto."
+async def conversa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in interacoes:
+        interacoes[user_id] = 0
 
-iscas_publicas = [
+    etapa = interacoes[user_id]
+    resposta = etapas_conversa.get(etapa, etapas_conversa[6])
+    await update.message.reply_text(resposta)
+
+    if etapa < 6:
+        interacoes[user_id] += 1
+    else:
+        interacoes[user_id] = 0
+
+iscas = [
     "⚡️ Hoje já foram 3 Pix de R$100 pra quem aplicou o método. Você pode ser o próximo(a). Manda 'quero' pra saber como.",
     "🚨 Método atualizado liberado: sem vender, sem seguidores, só usando o celular e foco. Digita 'como funciona'.",
     "👀 Já viu alguém receber Pix e pensou: 'por que não eu?' — talvez essa seja sua chance. Pergunta aqui."
 ]
 
-interacoes_usuario = {}
-
-def detectar_intencao(texto):
-    texto = texto.lower()
-    if any(p in texto for p in ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite"]):
-        return "saudacao"
-    elif any(p in texto for p in ["funciona", "verdade", "real", "mentira", "confio"]):
-        return "duvida"
-    elif any(p in texto for p in ["quero", "link", "acesso", "comprar", "como", "pix"]):
-        return "interesse"
-    else:
-        return "neutra"
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Seja bem-vindo(a) ao PixHoje! Vamos conversar... me diz o que você está buscando aqui?")
-
 async def isca(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = random.choice(iscas_publicas)
+    msg = random.choice(iscas)
     await context.bot.send_message(chat_id=CHAT_ID, text=msg)
-
-async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    texto = update.message.text
-    intencao = detectar_intencao(texto)
-
-    if user_id not in interacoes_usuario:
-        interacoes_usuario[user_id] = 0
-
-    if intencao == "saudacao":
-        resposta = random.choice(respostas_saudacao)
-    elif intencao == "duvida":
-        resposta = random.choice(respostas_duvida)
-    elif intencao == "interesse":
-        resposta = random.choice(respostas_interesse)
-    else:
-        resposta = "Me manda sua dúvida ou o que você gostaria de alcançar ainda esse mês. Tô aqui pra conversar com você."
-
-    await update.message.reply_text(resposta)
-
-    interacoes_usuario[user_id] += 1
-    if interacoes_usuario[user_id] >= 3:
-        await update.message.reply_text(mensagem_link)
-        interacoes_usuario[user_id] = 0
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("isca", isca))
-app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), responder))
+app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), conversa))
 
 if __name__ == "__main__":
     app.run_polling()
