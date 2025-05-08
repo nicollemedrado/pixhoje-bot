@@ -8,77 +8,76 @@ CHAT_ID = "@pixhojeoficial"
 
 logging.basicConfig(level=logging.INFO)
 
-# Respostas para conversa 1:1 (privado)
 respostas_saudacao = [
-    "Oi linda! 👋 Tô aqui justamente pra te mostrar um jeito diferente de ganhar dinheiro com o que você já tem: seu celular.",
-    "Bom dia! Já viu a galera recebendo Pix hoje cedo só por aplicar um método simples? Quer saber como?",
-    "Seja bem-vinda! Você já ouviu falar no método que tá fazendo gente comum receber Pix todo dia?"
+    "Olá! Seja muito bem-vindo(a) ao PixHoje 👋\nVocê tá aqui por um motivo... quer saber o que vai mudar a sua vida hoje?",
+    "Oi! Bem-vindo(a). Tô aqui pra te mostrar um caminho novo com o celular que você já tem nas mãos.",
+    "Seja bem-vindo(a)! Já ouviu falar do método que tá fazendo Pix cair pra gente comum todos os dias?"
 ]
 
 respostas_duvida = [
-    "A pergunta é comum, mas te entendo. Olha o que a Giovanna Lima me mandou ontem após aplicar o método: recebeu R$100 no segundo dia!",
-    "Funciona sim! Evelyn Silva aplicou e me mandou print de um Pix de R$250. O segredo é começar.",
-    "A dúvida é normal, mas quem aplica de verdade, colhe. Caroline Santos começou na dúvida e hoje já bateu R$75 por dia."
+    "É normal desconfiar... mas sabe quem não recebeu Pix? Quem nunca tentou. 😉",
+    "A dúvida é o que separa quem fica parado de quem muda de vida.",
+    "Funciona sim! E eu só te mostro porque já vi acontecer com várias pessoas que começaram sem acreditar também."
 ]
 
-respostas_acao = [
-    "Perfeito. Mas vai com foco. 👉 https://bit.ly/pixhojevip\nDepois que acessar, volta aqui e me conta que eu te ajudo no passo 1.",
-    "Aqui está o acesso que tá mudando vidas: https://bit.ly/pixhojevip\nComeça hoje e me chama se precisar de ajuda.",
-    "Não perde tempo. Esse é o método: https://bit.ly/pixhojevip\nVocê só precisa aplicar e me contar o resultado depois."
+respostas_interesse = [
+    "Adoro quando alguém quer saber mais. Isso já mostra atitude.",
+    "Quer saber mais? Só me promete que se eu te mostrar, você vai aplicar, combinado?",
+    "Tá pronto(a) pra realmente fazer diferente dessa vez?"
 ]
 
-respostas_neutra = [
-    "Você não caiu aqui por acaso... posso te mostrar um caminho real de renda. Me manda uma dúvida e te explico.",
-    "Tô aqui pra te mostrar como fazer Pix ainda hoje usando só seu celular. Me pergunta o que quiser.",
-    "Se estiver com curiosidade, é só perguntar. Gosto de conversar com quem realmente quer mudar de vida."
-]
+mensagem_link = "Então agora sim... você está pronto(a).\n👉 https://bit.ly/pixhojevip\nDepois de acessar, me chama aqui com seu print, quero acompanhar de perto."
 
-# Mensagens públicas (iscas) sob comando
 iscas_publicas = [
-    "⚡️ Resultado de hoje: 3 Pix de R$100 recebidos com esse método simples. Não é curso, nem venda — é aplicação. Digite 'quero' no privado.",
-    "👩‍🦰 “Fiz R$164 na minha primeira semana!” – Mensagem enviada por uma das seguidoras. Será que é você a próxima? 😏",
-    "Hoje liberamos 20 acessos do método Pix. Ainda restam 3. Quem quiser entrar, me chama no privado com 'Pix'.",
-    "🚨 ATENÇÃO: método atualizado liberado para quem quer fazer R$75 a R$250 no Pix sem vender nada. Use seu celular e foco. Digite /pixhoje."
+    "⚡️ Hoje já foram 3 Pix de R$100 pra quem aplicou o método. Você pode ser o próximo(a). Manda 'quero' pra saber como.",
+    "🚨 Método atualizado liberado: sem vender, sem seguidores, só usando o celular e foco. Digita 'como funciona'.",
+    "👀 Já viu alguém receber Pix e pensou: 'por que não eu?' — talvez essa seja sua chance. Pergunta aqui."
 ]
 
-# Detectar intenção
+interacoes_usuario = {}
+
 def detectar_intencao(texto):
     texto = texto.lower()
     if any(p in texto for p in ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite"]):
         return "saudacao"
     elif any(p in texto for p in ["funciona", "verdade", "real", "mentira", "confio"]):
         return "duvida"
-    elif any(p in texto for p in ["quero", "link", "acesso", "comprar", "me manda", "como", "pix"]):
-        return "acao"
+    elif any(p in texto for p in ["quero", "link", "acesso", "comprar", "como", "pix"]):
+        return "interesse"
     else:
         return "neutra"
 
-# Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🤖 Seja bem-vinda ao PixHoje!\nMe diga uma dúvida ou o que você busca, e eu te respondo como uma amiga que já descobriu o caminho. :)"
-    )
+    await update.message.reply_text("🤖 Seja bem-vindo(a) ao PixHoje! Vamos conversar... me diz o que você está buscando aqui?")
 
-# Resposta 1:1 automática
+async def isca(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = random.choice(iscas_publicas)
+    await context.bot.send_message(chat_id=CHAT_ID, text=msg)
+
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    intencao = detectar_intencao(update.message.text)
+    user_id = update.message.from_user.id
+    texto = update.message.text
+    intencao = detectar_intencao(texto)
+
+    if user_id not in interacoes_usuario:
+        interacoes_usuario[user_id] = 0
+
     if intencao == "saudacao":
         resposta = random.choice(respostas_saudacao)
     elif intencao == "duvida":
         resposta = random.choice(respostas_duvida)
-    elif intencao == "acao":
-        resposta = random.choice(respostas_acao)
+    elif intencao == "interesse":
+        resposta = random.choice(respostas_interesse)
     else:
-        resposta = random.choice(respostas_neutra)
+        resposta = "Me manda sua dúvida ou o que você gostaria de alcançar ainda esse mês. Tô aqui pra conversar com você."
 
     await update.message.reply_text(resposta)
 
-# Comando /isca para postar publicamente no canal
-async def isca(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    mensagem = random.choice(iscas_publicas)
-    await context.bot.send_message(chat_id=CHAT_ID, text=mensagem)
+    interacoes_usuario[user_id] += 1
+    if interacoes_usuario[user_id] >= 3:
+        await update.message.reply_text(mensagem_link)
+        interacoes_usuario[user_id] = 0
 
-# Setup do bot
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("isca", isca))
